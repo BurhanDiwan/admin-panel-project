@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartHome Manager - Simulation Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: #131722; color: #d1d5db; padding: 18px; }
+        .main-wrapper { max-width: 1240px; margin: 0 auto; }
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; background: #1e222d; border: 1px solid #2e3440; border-radius: 8px; padding: 12px 18px; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+        .logo-title { font-size: 1.25rem; font-weight: 700; color: #60a5fa; display: flex; align-items: center; gap: 10px; }
+        .status-dot { width: 9px; height: 9px; background: #22c55e; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px #22c55e; }
+        .role-selector-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .btn { padding: 7px 13px; border-radius: 6px; border: 1px solid transparent; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: 0.15s ease-in-out; }
+        .btn-primary { background: #2563eb; color: #fff; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-success { background: #16a34a; color: #fff; }
+        .btn-danger { background: #dc2626; color: #fff; }
+        .btn-danger:hover { background: #b91c1c; }
+        .btn-outline { background: #262b37; color: #e5e7eb; border-color: #3b4252; }
+        .btn-outline:hover { background: #323846; }
+        .btn-role-active { background: #1e3a8a; border-color: #3b82f6; color: #93c5fd; }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-box { background: #1e222d; border: 1px solid #2e3440; border-radius: 8px; padding: 14px 16px; }
+        .stat-title { font-size: 0.75rem; text-transform: uppercase; color: #9ca3af; letter-spacing: 0.5px; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; color: #f3f4f6; margin-top: 4px; }
+        .quick-form-card { background: #1e222d; border: 1px solid #2e3440; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .quick-form-card input, .quick-form-card select { background: #131722; border: 1px solid #3b4252; color: #e5e7eb; padding: 7px 11px; border-radius: 6px; font-size: 0.85rem; }
+        .filter-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+        .filter-tab { background: #1e222d; border: 1px solid #2e3440; color: #9ca3af; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.82rem; }
+        .filter-tab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+        .devices-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .device-box { background: #1e222d; border: 1px solid #2e3440; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+        .device-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .device-name { font-weight: 600; font-size: 1rem; color: #f9fafb; }
+        .device-sub { font-size: 0.78rem; color: #9ca3af; margin-top: 2px; }
+        .pill { font-size: 0.72rem; padding: 3px 8px; border-radius: 12px; font-weight: 600; text-transform: uppercase; }
+        .pill-on { background: #064e3b; color: #34d399; }
+        .pill-off { background: #374151; color: #9ca3af; }
+        .pill-malf { background: #7f1d1d; color: #f87171; }
+        .feature-panel { background: #131722; border: 1px solid #2b303c; border-radius: 6px; padding: 10px; font-size: 0.82rem; display: flex; flex-direction: column; gap: 8px; }
+        .slider-row { display: flex; justify-content: space-between; align-items: center; }
+        .feature-panel input[type=range] { width: 100%; accent-color: #3b82f6; }
+        .feature-panel select { background: #1e222d; border: 1px solid #3b4252; color: #e5e7eb; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .stepper-wrap { display: flex; align-items: center; gap: 10px; }
+        .stepper-wrap button { width: 28px; height: 28px; border-radius: 4px; border: 1px solid #3b4252; background: #262b37; color: #fff; cursor: pointer; }
+        .device-foot { display: flex; gap: 8px; align-items: center; margin-top: auto; padding-top: 8px; border-top: 1px solid #262b37; flex-wrap: wrap; }
+        .lower-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card-panel { background: #1e222d; border: 1px solid #2e3440; border-radius: 8px; padding: 16px; }
+        .card-panel h3 { font-size: 0.95rem; font-weight: 600; color: #93c5fd; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .input-group { display: flex; gap: 8px; }
+        .input-group input { flex: 1; background: #131722; border: 1px solid #3b4252; color: #f3f4f6; padding: 7px 12px; border-radius: 6px; font-size: 0.85rem; }
+        .log-display { background: #0d1117; border: 1px solid #21262d; border-radius: 6px; padding: 10px; font-family: Consolas, monospace; font-size: 0.78rem; color: #58a6ff; max-height: 140px; overflow-y: auto; margin-top: 10px; line-height: 1.45; }
+        .alert-entry { background: #2b1d20; border-left: 3px solid #ef4444; padding: 8px 12px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 8px; }
+        .rec-entry { background: #1a2332; border-left: 3px solid #3b82f6; padding: 8px 12px; border-radius: 4px; font-size: 0.8rem; margin-bottom: 8px; }
+        .footer-note { text-align: center; font-size: 0.78rem; color: #6b7280; padding: 12px 0 20px 0; }
+    </style>
+</head>
+<body>
+<div class="main-wrapper">
+    <div class="top-navbar">
+        <div>
+            <div class="logo-title">
+                <span class="status-dot"></span> SmartHome Manager
+            </div>
+            <div style="font-size:0.75rem; color:#9ca3af; margin-top:2px;">
+                Home Automation Backend Simulator • Term Assignment Dashboard
+            </div>
+        </div>
+        <div class="role-selector-bar">
+            <span style="font-size:0.8rem; color:#9ca3af;">Testing Role:</span>
+            <button id="tab-admin" class="btn btn-outline btn-role-active" onclick="setRole('admin')">Admin</button>
+            <button id="tab-guest" class="btn btn-outline" onclick="setRole('guest')">Guest</button>
+            <button id="tab-child" class="btn btn-outline" onclick="setRole('child')">Child</button>
+            <button class="btn btn-danger" onclick="triggerPanicMode()">Emergency Mode</button>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-box">
+            <div class="stat-title">Appliances Total</div>
+            <div class="stat-value" id="s-total">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-title">Active (ON)</div>
+            <div class="stat-value" id="s-on" style="color:#4ade80;">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-title">Standby / Off</div>
+            <div class="stat-value" id="s-off" style="color:#9ca3af;">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-title">Malfunctions</div>
+            <div class="stat-value" id="s-malf" style="color:#f87171;">0</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-title">Simulated Energy</div>
+            <div class="stat-value" id="s-kwh" style="color:#60a5fa;">0 <span style="font-size:0.9rem; font-weight:normal;">kWh</span></div>
+        </div>
+    </div>
+
+    <div class="quick-form-card">
+        <span style="font-size:0.85rem; font-weight:600; color:#e5e7eb;">Add Virtual Device:</span>
+        <input type="text" id="dev-name-input" placeholder="Device Name (e.g. Study Lamp)">
+        <select id="dev-type-select">
+            <option value="lamp">Lamp (Dimmer & Color)</option>
+            <option value="fan">Ceiling Fan (3-Speed)</option>
+            <option value="thermostat">Thermostat (18-30°C)</option>
+            <option value="ac">Smart AC</option>
+            <option value="heater">Space Heater</option>
+            <option value="coffee_maker">Coffee Maker</option>
+            <option value="door_lock">Smart Door Lock</option>
+        </select>
+        <select id="dev-room-select">
+            <option value="">Select Room...</option>
+        </select>
+        <button class="btn btn-primary" onclick="handleCreateDevice()">+ Create</button>
+    </div>
+
+    <div class="filter-tabs" id="room-filter-tabs">
+        <button class="filter-tab active" onclick="applyFilter('all', this)">All Appliances</button>
+    </div>
+
+    <div class="devices-area" id="devices-list"></div>
+
+    <div class="lower-grid">
+        <div class="card-panel">
+            <h3>Voice Control Terminal</h3>
+            <p style="font-size:0.78rem; color:#9ca3af; margin-bottom:8px;">Try typing: "turn off all lights", "set Smart Thermostat temperature to 24", "set Ceiling Fan speed to Low", or "what is the status of Smart Lamp"</p>
+            <div class="input-group">
+                <input type="text" id="voice-cmd-text" placeholder="Type simulated voice command...">
+                <button class="btn btn-primary" onclick="handleVoiceCmd()">Execute</button>
+            </div>
+            <div class="log-display" id="voice-reply-box">Terminal ready for commands.</div>
+        </div>
+
+        <div class="card-panel">
+            <h3>Automations & Quick Triggers</h3>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <button class="btn btn-outline" style="text-align:left;" onclick="triggerRoutineExec()">Trigger 'Night Mode' Routine (Shuts off lights/fans)</button>
+                <button class="btn btn-outline" style="text-align:left;" onclick="triggerGroupActivate()">Activate 'Morning Routine' Group</button>
+                <button class="btn btn-outline" style="text-align:left;" onclick="triggerMalfunctionScan()">Run Malfunction Safety Scanner (Detects 24h+ Heaters)</button>
+                <button class="btn btn-outline" style="text-align:left;" onclick="fetchUsagePredictions()">Run Simulated Usage Prediction Algorithm</button>
+            </div>
+            <div class="log-display" id="action-log-box">Simulation logs ready.</div>
+        </div>
+
+        <div class="card-panel">
+            <h3>Safety & Malfunction Warnings</h3>
+            <div id="alerts-listing" style="max-height:165px; overflow-y:auto;"></div>
+        </div>
+
+        <div class="card-panel">
+            <h3>Energy Efficiency Insights</h3>
+            <div id="recs-listing" style="max-height:165px; overflow-y:auto;"></div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        SmartHome_Manager Backend Assignment Simulator • Running on Node.js, Express & MongoDB
+    </div>
+</div>
+
+<script>
+let authToken = ''
+let currentRole = 'admin'
+let allRoomsList = []
+let activeRoomFilter = 'all'
+let rawDevicesCache = []
+
+const accountList = {
+    admin: { email: 'admin@smarthome.com', password: 'password123' },
+    guest: { email: 'guest@smarthome.com', password: 'guest123' },
+    child: { email: 'child@smarthome.com', password: 'child123' }
+}
+
+async function setRole(selectedRole) {
+    currentRole = selectedRole
+    document.querySelectorAll('.role-selector-bar button').forEach(b => {
+        b.classList.remove('btn-role-active')
+    })
+    let targetBtn = document.getElementById('tab-' + selectedRole)
+    if (targetBtn) targetBtn.classList.add('btn-role-active')
+
+    try {
+        let resp = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(accountList[selectedRole])
+        })
+        let resData = await resp.json()
+        if (resData.token) {
+            authToken = resData.token
+            writeLog(`Logged in as role: ${selectedRole.toUpperCase()}`)
+            refreshDashboard()
+        }
+    } catch (err) {
+        writeLog("Auth failed: " + err.message)
+    }
+}
+
+async function refreshDashboard() {
+    if (!authToken) {
+        await setRole(currentRole)
+        return
+    }
+
+    try {
+        let res = await fetch('/api/dashboard', {
+            headers: { 'Authorization': 'Bearer ' + authToken }
+        })
+        let data = await res.json()
+
+        if (data.metrics) {
+            document.getElementById('s-total').innerText = data.metrics.totalDevices
+            document.getElementById('s-on').innerText = data.metrics.devicesOn
+            document.getElementById('s-off').innerText = data.metrics.devicesOff
+            document.getElementById('s-malf').innerText = data.metrics.devicesMalfunctioning
+            document.getElementById('s-kwh').innerText = data.metrics.totalEnergyKwh
+        }
+
+        allRoomsList = data.rooms || []
+        updateRoomSelectors(allRoomsList)
+
+        rawDevicesCache = data.allDevices || []
+        displayDevices(rawDevicesCache)
+
+        displayAlerts(data.recentAlerts || [])
+        fetchRecommendations()
+    } catch (e) {
+        console.error(e)
+    }
+}
+
+function updateRoomSelectors(rooms) {
+    let sel = document.getElementById('dev-room-select')
+    let curVal = sel.value
+    sel.innerHTML = '<option value="">Select Room...</option>'
+    rooms.forEach(r => {
+        let opt = document.createElement('option')
+        opt.value = r._id
+        opt.innerText = r.name
+        sel.appendChild(opt)
+    })
+    if (curVal) sel.value = curVal
+
+    let tabs = document.getElementById('room-filter-tabs')
+    let curActive = activeRoomFilter
+    tabs.innerHTML = `<button class="filter-tab ${curActive === 'all' ? 'active' : ''}" onclick="applyFilter('all', this)">All Appliances</button>`
+
+    rooms.forEach(r => {
+        let btn = document.createElement('button')
+        btn.className = `filter-tab ${curActive === r._id ? 'active' : ''}`
+        btn.innerText = r.name
+        btn.onclick = function() {
+            applyFilter(r._id, this)
+        }
+        tabs.appendChild(btn)
+    })
+}
+
+function applyFilter(roomId, btnElem) {
+    activeRoomFilter = roomId
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'))
+    if (btnElem) btnElem.classList.add('active')
+    displayDevices(rawDevicesCache)
+}
+
+function displayDevices(devices) {
+    let container = document.getElementById('devices-list')
+    container.innerHTML = ''
+
+    let list = devices
+    if (activeRoomFilter !== 'all') {
+        list = devices.filter(d => {
+            if (!d.roomId) return false
+            let id = d.roomId._id ? d.roomId._id : d.roomId
+            return id === activeRoomFilter
+        })
+    }
+
+    if (list.length === 0) {
+        container.innerHTML = '<div style="color:#6b7280; font-size:0.85rem; padding:15px;">No appliances found in this category.</div>'
+        return
+    }
+
+    list.forEach(dev => {
+        let box = document.createElement('div')
+        box.className = 'device-box'
+
+        let pillClass = dev.status === 'on' ? 'pill-on' : (dev.status === 'malfunction' ? 'pill-malf' : 'pill-off')
+        let roomLabel = dev.roomId ? dev.roomId.name : 'Unassigned'
+
+        let controlsHtml = ''
+        if (dev.type === 'lamp') {
+            let b = (dev.features && dev.features.brightness !== undefined) ? dev.features.brightness : 100
+            let cm = (dev.features && dev.features.colorMode) || 'Warm'
+            controlsHtml = `
+                <div class="feature-panel">
+                    <div class="slider-row">
+                        <span>Dimmer Level:</span>
+                        <span id="label-b-${dev._id}" style="color:#60a5fa; font-weight:600;">${b}%</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="${b}" onchange="changeLampBrightness('${dev._id}', this.value)">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                        <span>Color Mode:</span>
+                        <select onchange="changeLampColorMode('${dev._id}', this.value)">
+                            <option value="Warm" ${cm === 'Warm' ? 'selected' : ''}>Warm</option>
+                            <option value="Cold" ${cm === 'Cold' ? 'selected' : ''}>Cold</option>
+                        </select>
+                    </div>
+                </div>`
+        } else if (dev.type === 'fan') {
+            let sp = (dev.features && dev.features.speed) || 'Medium'
+            controlsHtml = `
+                <div class="feature-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Speed Setting:</span>
+                        <select onchange="changeFanSpeed('${dev._id}', this.value)">
+                            <option value="Low" ${sp === 'Low' ? 'selected' : ''}>Low</option>
+                            <option value="Medium" ${sp === 'Medium' ? 'selected' : ''}>Medium</option>
+                            <option value="High" ${sp === 'High' ? 'selected' : ''}>High</option>
+                        </select>
+                    </div>
+                </div>`
+        } else if (dev.type === 'thermostat') {
+            let t = (dev.features && dev.features.temperature) || 22
+            controlsHtml = `
+                <div class="feature-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Target Temp (18-30°C):</span>
+                        <div class="stepper-wrap">
+                            <button onclick="stepThermostat('${dev._id}', -1)">-</button>
+                            <span id="temp-${dev._id}" style="font-weight:700; color:#60a5fa;">${t}°C</span>
+                            <button onclick="stepThermostat('${dev._id}', 1)">+</button>
+                        </div>
+                    </div>
+                </div>`
+        } else if (dev.type === 'heater') {
+            let t = (dev.features && dev.features.temperature) || 23
+            controlsHtml = `
+                <div class="feature-panel">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span>Heating Temp: <b>${t}°C</b></span>
+                        <span style="color:#f59e0b;">Total: ${Math.round(dev.totalUsageMinutes / 60)} hrs</span>
+                    </div>
+                </div>`
+        } else if (dev.type === 'door_lock') {
+            let locked = dev.features && dev.features.locked
+            controlsHtml = `
+                <div class="feature-panel">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Security Lock:</span>
+                        <b style="color:${locked ? '#4ade80' : '#f87171'}">${locked ? 'LOCKED' : 'UNLOCKED'}</b>
+                    </div>
+                </div>`
+        }
+
+        let connectAction = !dev.connected
+            ? `<button class="btn btn-success" style="font-size:0.75rem;" onclick="connectVirtualDevice('${dev._id}')">Connect</button>`
+            : `<button class="btn btn-outline" style="font-size:0.75rem;" onclick="disconnectVirtualDevice('${dev._id}')">Disconnect</button>`
+
+        let toggleAction = dev.connected
+            ? `<button class="btn ${dev.status === 'on' ? 'btn-danger' : 'btn-primary'}" style="font-size:0.78rem;" onclick="toggleVirtualDevice('${dev._id}')">${dev.status === 'on' ? 'Turn Off' : 'Turn On'}</button>`
+            : `<span style="font-size:0.75rem; color:#6b7280;">Must Connect</span>`
+
+        box.innerHTML = `
+            <div class="device-top">
+                <div>
+                    <div class="device-name">${dev.name}</div>
+                    <div class="device-sub">${dev.type.toUpperCase()} • ${roomLabel}</div>
+                </div>
+                <span class="pill ${pillClass}">${dev.status}</span>
+            </div>
+            ${controlsHtml}
+            <div class="device-foot">
+                ${connectAction}
+                ${toggleAction}
+                <button class="btn btn-outline" style="font-size:0.75rem; margin-left:auto;" onclick="simulateFailure('${dev._id}')">Simulate Malfunction</button>
+            </div>
+        `
+        container.appendChild(box)
+    })
+}
+
+function displayAlerts(alerts) {
+    let wrap = document.getElementById('alerts-listing')
+    wrap.innerHTML = ''
+    if (!alerts || alerts.length === 0) {
+        wrap.innerHTML = '<div style="color:#6b7280; font-size:0.8rem;">No active alerts. All devices reporting normal.</div>'
+        return
+    }
+    alerts.forEach(a => {
+        let item = document.createElement('div')
+        item.className = 'alert-entry'
+        item.innerHTML = `<b>${a.type.toUpperCase()}:</b> ${a.message}`
+        wrap.appendChild(item)
+    })
+}
+
+async function fetchRecommendations() {
+    try {
+        let resp = await fetch('/api/energy/recommendations', {
+            headers: { 'Authorization': 'Bearer ' + authToken }
+        })
+        let data = await resp.json()
+        let wrap = document.getElementById('recs-listing')
+        wrap.innerHTML = ''
+        if (!data.recommendations || data.recommendations.length === 0) {
+            wrap.innerHTML = '<div style="color:#6b7280; font-size:0.8rem;">No recommendations available right now.</div>'
+            return
+        }
+        data.recommendations.forEach(r => {
+            let el = document.createElement('div')
+            el.className = 'rec-entry'
+            el.innerHTML = `<b>${r.type.toUpperCase()}:</b> ${r.message}`
+            wrap.appendChild(el)
+        })
+    } catch (e) {
+        console.error(e)
+    }
+}
+
+async function handleCreateDevice() {
+    let nameInput = document.getElementById('dev-name-input')
+    let typeInput = document.getElementById('dev-type-select')
+    let roomInput = document.getElementById('dev-room-select')
+
+    let name = nameInput.value.trim()
+    if (!name) {
+        alert("Please enter a device name")
+        return
+    }
+
+    try {
+        let resp = await fetch('/api/devices', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: name,
+                type: typeInput.value,
+                roomId: roomInput.value || null
+            })
+        })
+        let resData = await resp.json()
+        if (resp.status === 201) {
+            writeLog(`Created device: ${resData.name} (${resData.type})`)
+            nameInput.value = ''
+            refreshDashboard()
+        } else {
+            writeLog(`Error creating device: ${resData.msg}`)
+        }
+    } catch (e) {
+        writeLog("Request error: " + e.message)
+    }
+}
+
+async function connectVirtualDevice(id) {
+    let res = await fetch(`/api/devices/${id}/connect`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let data = await res.json()
+    writeLog(data.msg)
+    refreshDashboard()
+}
+
+async function disconnectVirtualDevice(id) {
+    let res = await fetch(`/api/devices/${id}/disconnect`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let data = await res.json()
+    writeLog(data.msg)
+    refreshDashboard()
+}
+
+async function toggleVirtualDevice(id) {
+    let res = await fetch(`/api/devices/${id}/toggle`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let data = await res.json()
+    if (res.status !== 200) {
+        writeLog("Blocked: " + data.msg)
+    } else {
+        writeLog(data.msg + (data.sessionKwh ? ` [${data.sessionKwh} kWh generated]` : ''))
+        refreshDashboard()
+    }
+}
+
+async function changeLampBrightness(id, val) {
+    let label = document.getElementById('label-b-' + id)
+    if (label) label.innerText = val + '%'
+    let res = await fetch(`/api/devices/${id}/settings`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brightness: Number(val) })
+    })
+    let data = await res.json()
+    writeLog(data.msg || "Brightness adjusted")
+}
+
+async function changeLampColorMode(id, mode) {
+    let res = await fetch(`/api/devices/${id}/settings`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ colorMode: mode })
+    })
+    let data = await res.json()
+    writeLog(data.msg || "Color mode adjusted")
+}
+
+async function changeFanSpeed(id, speed) {
+    let res = await fetch(`/api/devices/${id}/settings`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ speed: speed })
+    })
+    let data = await res.json()
+    writeLog(data.msg || "Fan speed adjusted")
+}
+
+async function stepThermostat(id, delta) {
+    let elem = document.getElementById('temp-' + id)
+    let cur = parseInt(elem.innerText)
+    let nextVal = cur + delta
+    let res = await fetch(`/api/devices/${id}/settings`, {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temperature: nextVal })
+    })
+    let data = await res.json()
+    if (res.status === 200) {
+        elem.innerText = nextVal + '°C'
+        writeLog(`Thermostat set to ${nextVal}°C`)
+    } else {
+        writeLog(`Failed: ${data.msg}`)
+    }
+}
+
+async function simulateFailure(id) {
+    let res = await fetch(`/api/devices/${id}/simulate-malfunction`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let data = await res.json()
+    writeLog(data.msg)
+    refreshDashboard()
+}
+
+async function triggerPanicMode() {
+    let res = await fetch('/api/emergency/activate', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let data = await res.json()
+    if (res.status === 200) {
+        writeLog(data.msg)
+        refreshDashboard()
+    } else {
+        writeLog(`Emergency mode rejected: ${data.msg}`)
+    }
+}
+
+async function handleVoiceCmd() {
+    let input = document.getElementById('voice-cmd-text')
+    let cmd = input.value.trim()
+    if (!cmd) return
+
+    let res = await fetch('/api/voice/command', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + authToken, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ command: cmd })
+    })
+    let data = await res.json()
+    document.getElementById('voice-reply-box').innerText = `> "${cmd}"\nResponse: ${data.response}`
+    input.value = ''
+    refreshDashboard()
+}
+
+async function triggerRoutineExec() {
+    let res = await fetch('/api/routines', {
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let routines = await res.json()
+    if (routines.length > 0) {
+        let execRes = await fetch(`/api/routines/${routines[0]._id}/execute`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + authToken }
+        })
+        let d = await execRes.json()
+        writeLog(d.msg)
+        refreshDashboard()
+    } else {
+        writeLog("No routines configured.")
+    }
+}
+
+async function triggerGroupActivate() {
+    let res = await fetch('/api/groups', {
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let groups = await res.json()
+    if (groups.length > 0) {
+        let actRes = await fetch(`/api/groups/${groups[0]._id}/activate`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + authToken }
+        })
+        let d = await actRes.json()
+        writeLog(d.msg)
+        refreshDashboard()
+    } else {
+        writeLog("No device groups found.")
+    }
+}
+
+async function triggerMalfunctionScan() {
+    let res = await fetch('/api/alerts/check', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let d = await res.json()
+    writeLog(`Safety Scan: Scanned ${d.scannedDevices} devices. Generated ${d.newAlertsGenerated} alerts.`)
+    refreshDashboard()
+}
+
+async function fetchUsagePredictions() {
+    let res = await fetch('/api/devices/predictions', {
+        headers: { 'Authorization': 'Bearer ' + authToken }
+    })
+    let d = await res.json()
+    if (d.predictions && d.predictions.length > 0) {
+        let item = d.predictions[0]
+        writeLog(`Prediction Result: ${item.recommendation} [Confidence: ${item.confidence}]`)
+    } else {
+        writeLog("No recurring patterns discovered.")
+    }
+}
+
+function writeLog(text) {
+    let box = document.getElementById('action-log-box')
+    let time = new Date().toLocaleTimeString()
+    box.innerText = `[${time}] ${text}\n` + box.innerText
+}
+
+window.onload = function() {
+    setRole('admin')
+}
+</script>
+</body>
+</html>
