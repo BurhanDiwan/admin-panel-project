@@ -1,2 +1,10 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Environment variables
 .env
+.env.*
+!.env.example
+
+# Logs
+npm-debug.log*
